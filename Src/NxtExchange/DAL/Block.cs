@@ -12,6 +12,11 @@ namespace NxtExchange.DAL
         public long BlockId { get; set; }
         public int Height { get; set; }
         public DateTime Timestamp { get; set; }
-        public virtual ICollection<InboundTransaction> InboundTransactions { get; set; } 
+        public virtual ICollection<InboundTransaction> InboundTransactions { get; set; }
+
+        public ulong GetBlockId()
+        {
+            return (ulong) BlockId;
+        }
     }
 }
