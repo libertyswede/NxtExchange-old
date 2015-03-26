@@ -8,8 +8,8 @@ namespace NxtExchange.DAL
     {
         public int Id { get; set; }
 
-        [Index("UQ_BlockId", IsUnique = true)]
-        public long BlockId { get; set; }
+        [Index("UQ_NxtBlockId", IsUnique = true)]
+        public long NxtBlockId { get; set; }
         public int Height { get; set; }
 
         [DateTimeKind(DateTimeKind.Utc)]

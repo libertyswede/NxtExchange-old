@@ -34,8 +34,9 @@ namespace NxtExchange
                     Height = nextBlockResult.Height,
                     Timestamp = nextBlockResult.Timestamp,
                     InboundTransactions = CreateInboundTransactions(nextBlockResult.Transactions),
-                    BlockId = nextBlockResult.BlockId.ToSigned()
+                    NxtBlockId = nextBlockResult.BlockId.ToSigned()
                 };
+                block.InboundTransactions.ToList().ForEach(t => t.Block = block);
             }
             return block;
         }
@@ -51,9 +52,9 @@ namespace NxtExchange
                 {
                     AmountNqt = transaction.Amount.Nqt,
                     Timestamp = transaction.Timestamp,
-                    TransactionId = transaction.TransactionId.ToSigned(),
-                    RecipientId = transaction.Recipient.ToSigned(),
-                    SenderId = transaction.Sender.ToSigned(),
+                    NxtTransactionId = transaction.TransactionId.ToSigned(),
+                    NxtRecipientId = transaction.Recipient.ToSigned(),
+                    NxtSenderId = transaction.Sender.ToSigned(),
                     Status = TransactionStatusCalculator.GetStatus(transaction)
                 };
 

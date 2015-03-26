@@ -15,8 +15,8 @@ namespace NxtExchange.DAL
     {
         public int Id { get; set; }
 
-        [Index("UQ_TransactionId", IsUnique = true)]
-        public long TransactionId { get; set; }
+        [Index("UQ_NxtTransactionId", IsUnique = true)]
+        public long NxtTransactionId { get; set; }
 
         [DateTimeKind(DateTimeKind.Utc)]
         public DateTime Timestamp { get; set; }
@@ -24,7 +24,9 @@ namespace NxtExchange.DAL
         public TransactionStatus Status { get; set; }
         public int BlockId { get; set; }
         public virtual Block Block { get; set; }
-        public long RecipientId { get; set; }
-        public long SenderId { get; set; }
+        public long NxtRecipientId { get; set; }
+        public long NxtSenderId { get; set; }
+        public int? RecipientAccountId { get; set; }
+        public Account RecipientAccount { get; set; }
     }
 }

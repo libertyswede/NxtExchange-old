@@ -31,7 +31,7 @@ namespace NxtExchange.Test
 
             var nextBlock = await _nxtConnector.GetNextBlock(123);
 
-            Assert.AreEqual(expectedBlockId, nextBlock.GetBlockId());
+            Assert.AreEqual(expectedBlockId, nextBlock.NxtBlockId.ToUnsigned());
         }
 
         [TestMethod]

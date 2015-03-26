@@ -18,7 +18,7 @@ namespace NxtExchange.Migrations
         {
             context.Blocks.Add(new Block
             {
-                BlockId = 2680262203532249785,
+                NxtBlockId = 2680262203532249785,
                 Height = 0,
                 Timestamp = new DateTime(2013, 11, 24, 12, 0, 0)
             });

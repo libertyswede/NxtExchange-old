@@ -30,14 +30,17 @@ namespace NxtExchange
         private async Task TraverseToLatestBlock(Block currentBlock)
         {
             var blockExists = true;
-            var blockId = currentBlock.GetBlockId();
+            var blockId = currentBlock.NxtBlockId.ToUnsigned();
             
             do 
             {
                 try
                 {
-                    var nextBlock = await _nxtConnector.GetNextBlock(blockId);
-                    if (nextBlock != null)
+                    currentBlock = await _nxtConnector.GetNextBlock(blockId);
+                    if (currentBlock != null)
+                    {
+                        await ProcessBlock(currentBlock);
+                    }
                 }
                 catch (NxtException e)
                 {
@@ -49,14 +52,22 @@ namespace NxtExchange
                 }
                 if (!blockExists)
                 {
-                    await Rollback(_lastKnownBlock.Height - 1);
+                    currentBlock = await Rollback(_lastKnownBlock.Height - 1);
+                    blockExists = true;
                 }
-            } while (blockExists && !hasNext);
+            } while (currentBlock != null);
         }
 
-        private async Task Rollback(int height)
+        private async Task ProcessBlock(Block block)
+        {
+            await _repository.AddBlock(block);
+            throw new System.NotImplementedException();
+        }
+
+        private async Task<Block> Rollback(int height)
         {
             var block = await _repository.GetBlockOnHeight(height);
+            throw new System.NotImplementedException();
         }
     }
 }

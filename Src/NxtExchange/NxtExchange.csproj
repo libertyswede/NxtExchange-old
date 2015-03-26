@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DAL\Account.cs" />
     <Compile Include="DAL\Block.cs" />
     <Compile Include="DAL\DateTimeKindAttribute.cs" />
     <Compile Include="DAL\InboundTransaction.cs" />
