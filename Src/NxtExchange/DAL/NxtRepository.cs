@@ -1,4 +1,5 @@
-﻿using System.Data.Entity;
+﻿using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,6 +10,8 @@ namespace NxtExchange.DAL
         Task AddBlock(Block block);
         Task<Block> GetLastBlock();
         Task<Block> GetBlockOnHeight(int height);
+        Task<List<Account>>  GetAccountsWithNxtId(IEnumerable<long> nxtAccountIds);
+        Task AddTransaction(InboundTransaction transaction);
     }
 
     public class NxtRepository : INxtRepository
@@ -36,6 +39,19 @@ namespace NxtExchange.DAL
             {
                 return await context.Blocks.SingleOrDefaultAsync(b => b.Height == height);
             }
+        }
+
+        public async Task<List<Account>> GetAccountsWithNxtId(IEnumerable<long> nxtAccountIds)
+        {
+            using (var context = new NxtContext())
+            {
+                return await context.Accounts.Where(a => nxtAccountIds.Contains(a.NxtAccountId)).ToListAsync();
+            }
+        }
+
+        public Task AddTransaction(InboundTransaction transaction)
+        {
+            
         }
     }
 }

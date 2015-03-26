@@ -7,6 +7,7 @@ namespace NxtExchange.DAL
     {
         public DbSet<Block> Blocks { get; set; }
         public DbSet<InboundTransaction> InboundTransactions { get; set; }
+        public DbSet<Account> Accounts { get; set; }
 
         public NxtContext()
         {

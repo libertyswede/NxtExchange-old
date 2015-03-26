@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using NxtExchange.DAL;
 using NxtLib;
 
@@ -61,6 +62,16 @@ namespace NxtExchange
         private async Task ProcessBlock(Block block)
         {
             await _repository.AddBlock(block);
+            var accounts = await _repository.GetAccountsWithNxtId(block.InboundTransactions.Select(t => t.NxtRecipientId));
+            foreach (var inboundTransaction in block.InboundTransactions)
+            {
+                var account = accounts.SingleOrDefault(a => a.NxtAccountId == inboundTransaction.NxtRecipientId);
+                if (account != null)
+                {
+                    inboundTransaction.RecipientAccount = account;
+                    await _repository.AddTransaction(inboundTransaction);
+                }
+            }
             throw new System.NotImplementedException();
         }
 
