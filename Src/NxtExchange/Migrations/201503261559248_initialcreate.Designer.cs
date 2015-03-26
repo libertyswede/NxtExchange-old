@@ -7,13 +7,13 @@ namespace NxtExchange.Migrations
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.1.3-40302")]
-    public sealed partial class InitialCreate : IMigrationMetadata
+    public sealed partial class initialcreate : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(InitialCreate));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(initialcreate));
         
         string IMigrationMetadata.Id
         {
-            get { return "201503250714072_InitialCreate"; }
+            get { return "201503261559248_initialcreate"; }
         }
         
         string IMigrationMetadata.Source
