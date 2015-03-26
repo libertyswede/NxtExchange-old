@@ -61,10 +61,6 @@
     <Compile Include="DAL\NxtContext.cs" />
     <Compile Include="DAL\NxtRepository.cs" />
     <Compile Include="LongExtension.cs" />
-    <Compile Include="Migrations\201503261559248_initialcreate.cs" />
-    <Compile Include="Migrations\201503261559248_initialcreate.Designer.cs">
-      <DependentUpon>201503261559248_initialcreate.cs</DependentUpon>
-    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="NxtConnector.cs" />
     <Compile Include="NxtController.cs" />
@@ -75,11 +71,6 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Migrations\201503261559248_initialcreate.resx">
-      <DependentUpon>201503261559248_initialcreate.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
