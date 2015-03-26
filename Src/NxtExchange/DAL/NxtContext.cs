@@ -1,4 +1,5 @@
 ﻿using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 
 namespace NxtExchange.DAL
 {
@@ -6,5 +7,16 @@ namespace NxtExchange.DAL
     {
         public DbSet<Block> Blocks { get; set; }
         public DbSet<InboundTransaction> InboundTransactions { get; set; }
+
+        public NxtContext()
+        {
+            EnsureDateTimeKindIsUtc();
+        }
+
+        private void EnsureDateTimeKindIsUtc()
+        {
+            ((IObjectContextAdapter) this).ObjectContext.ObjectMaterialized +=
+                (sender, e) => DateTimeKindAttribute.Apply(e.Entity);
+        }
     }
 }

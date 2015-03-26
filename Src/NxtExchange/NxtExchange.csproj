@@ -55,9 +55,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DAL\Block.cs" />
+    <Compile Include="DAL\DateTimeKindAttribute.cs" />
     <Compile Include="DAL\InboundTransaction.cs" />
     <Compile Include="DAL\NxtContext.cs" />
     <Compile Include="DAL\NxtRepository.cs" />
+    <Compile Include="LongExtension.cs" />
     <Compile Include="Migrations\201503250714072_InitialCreate.cs" />
     <Compile Include="Migrations\201503250714072_InitialCreate.Designer.cs">
       <DependentUpon>201503250714072_InitialCreate.cs</DependentUpon>
@@ -67,6 +69,7 @@
     <Compile Include="NxtController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TransactionStatusCalculator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -11,12 +11,9 @@ namespace NxtExchange.DAL
         [Index("UQ_BlockId", IsUnique = true)]
         public long BlockId { get; set; }
         public int Height { get; set; }
+
+        [DateTimeKind(DateTimeKind.Utc)]
         public DateTime Timestamp { get; set; }
         public virtual ICollection<InboundTransaction> InboundTransactions { get; set; }
-
-        public ulong GetBlockId()
-        {
-            return (ulong) BlockId;
-        }
     }
 }

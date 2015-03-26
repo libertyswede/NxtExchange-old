@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NxtExchange.DAL
 {
@@ -16,9 +17,14 @@ namespace NxtExchange.DAL
 
         [Index("UQ_TransactionId", IsUnique = true)]
         public long TransactionId { get; set; }
+
+        [DateTimeKind(DateTimeKind.Utc)]
+        public DateTime Timestamp { get; set; }
         public long AmountNqt { get; set; }
         public TransactionStatus Status { get; set; }
         public int BlockId { get; set; }
-        public virtual Block Block { get; set; } 
+        public virtual Block Block { get; set; }
+        public long RecipientId { get; set; }
+        public long SenderId { get; set; }
     }
 }

@@ -8,6 +8,7 @@ namespace NxtExchange.DAL
     {
         Task AddBlock(Block block);
         Task<Block> GetLastBlock();
+        Task<Block> GetBlockOnHeight(int height);
     }
 
     public class NxtRepository : INxtRepository
@@ -26,6 +27,14 @@ namespace NxtExchange.DAL
             using (var context = new NxtContext())
             {
                 return await context.Blocks.OrderByDescending(b => b.Timestamp).FirstAsync();
+            }
+        }
+
+        public async Task<Block> GetBlockOnHeight(int height)
+        {
+            using (var context = new NxtContext())
+            {
+                return await context.Blocks.SingleOrDefaultAsync(b => b.Height == height);
             }
         }
     }

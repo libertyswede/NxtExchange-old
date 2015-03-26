@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using NxtExchange.DAL;
+using NxtLib;
 
 namespace NxtExchange
 {
@@ -23,7 +24,39 @@ namespace NxtExchange
         public async Task Init()
         {
             _lastKnownBlock = await _repository.GetLastBlock();
-            await _nxtConnector.GetNextBlock(_lastKnownBlock.GetBlockId());
+            await TraverseToLatestBlock(_lastKnownBlock);
+        }
+
+        private async Task TraverseToLatestBlock(Block currentBlock)
+        {
+            var blockExists = true;
+            var blockId = currentBlock.GetBlockId();
+            
+            do 
+            {
+                try
+                {
+                    var nextBlock = await _nxtConnector.GetNextBlock(blockId);
+                    if (nextBlock != null)
+                }
+                catch (NxtException e)
+                {
+                    if (e.ErrorCode == 4)
+                    {
+                        blockExists = false;
+                    }
+
+                }
+                if (!blockExists)
+                {
+                    await Rollback(_lastKnownBlock.Height - 1);
+                }
+            } while (blockExists && !hasNext);
+        }
+
+        private async Task Rollback(int height)
+        {
+            var block = await _repository.GetBlockOnHeight(height);
         }
     }
 }
