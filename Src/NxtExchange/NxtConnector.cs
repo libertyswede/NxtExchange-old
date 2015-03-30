@@ -11,6 +11,7 @@ namespace NxtExchange
     public interface INxtConnector
     {
         Task<Block> GetNextBlock(ulong blockId);
+        Task<List<InboundTransaction>>  GetUnconfirmedTransactions();
     }
 
     public class NxtConnector : INxtConnector
@@ -39,6 +40,11 @@ namespace NxtExchange
                 block.InboundTransactions.ToList().ForEach(t => t.Block = block);
             }
             return block;
+        }
+
+        public Task<List<InboundTransaction>> GetUnconfirmedTransactions()
+        {
+            throw new System.NotImplementedException();
         }
 
         private ICollection<InboundTransaction> CreateInboundTransactions(List<Transaction> transactions)

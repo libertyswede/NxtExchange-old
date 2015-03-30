@@ -54,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlockProcessor.cs" />
     <Compile Include="DAL\Account.cs" />
     <Compile Include="DAL\Block.cs" />
     <Compile Include="DAL\DateTimeKindAttribute.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="NxtController.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TransactionProcessor.cs" />
     <Compile Include="TransactionStatusCalculator.cs" />
   </ItemGroup>
   <ItemGroup>

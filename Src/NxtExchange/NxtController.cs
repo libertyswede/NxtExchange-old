@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NxtExchange.DAL;
 using NxtLib;
@@ -9,76 +11,84 @@ namespace NxtExchange
     {
         private readonly INxtRepository _repository;
         private readonly INxtConnector _nxtConnector;
+        private readonly IBlockProcessor _blockProcessor;
+        private readonly List<InboundTransaction> _unconfirmedTransactions = new List<InboundTransaction>();
         private Block _lastKnownBlock;
 
-        public NxtController(INxtRepository repository, INxtConnector nxtConnector)
+        public NxtController(INxtRepository repository, INxtConnector nxtConnector, IBlockProcessor blockProcessor)
         {
             _repository = repository;
             _nxtConnector = nxtConnector;
+            _blockProcessor = blockProcessor;
         }
 
         public async Task Start()
         {
             await Init();
+            await TraverseToLatestBlock(_lastKnownBlock);
+            await CheckForNewTransactions();
         }
 
         public async Task Init()
         {
             _lastKnownBlock = await _repository.GetLastBlock();
-            await TraverseToLatestBlock(_lastKnownBlock);
+        }
+
+        private async Task CheckForNewTransactions()
+        {
+            while (true)
+            {
+                await TraverseToLatestBlock(_lastKnownBlock);
+                var transactions = await _nxtConnector.GetUnconfirmedTransactions();
+                var newTransactions = transactions.Except(_unconfirmedTransactions).ToList();
+                var accounts = await _repository.GetAccountsWithNxtId(newTransactions.Select(t => t.NxtRecipientId));
+                foreach (var account in accounts)
+                {
+                    
+                }
+                await Task.Delay(new TimeSpan(0, 0, 10));
+            }
         }
 
         private async Task TraverseToLatestBlock(Block currentBlock)
         {
-            var blockExists = true;
-            var blockId = currentBlock.NxtBlockId.ToUnsigned();
+            var currentBlockExistsInBlockchain = true;
+            Block nextBlock = null;
             
-            do 
+            do
             {
                 try
                 {
-                    currentBlock = await _nxtConnector.GetNextBlock(blockId);
-                    if (currentBlock != null)
-                    {
-                        await ProcessBlock(currentBlock);
-                    }
+                    nextBlock = await _nxtConnector.GetNextBlock(currentBlock.NxtBlockId.ToUnsigned());
                 }
                 catch (NxtException e)
                 {
                     if (e.ErrorCode == 4)
                     {
-                        blockExists = false;
+                        currentBlockExistsInBlockchain = false;
                     }
-
+                    else
+                    {
+                        throw;
+                    }
                 }
-                if (!blockExists)
+                if (!currentBlockExistsInBlockchain)
                 {
-                    currentBlock = await Rollback(_lastKnownBlock.Height - 1);
-                    blockExists = true;
+                    await _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
+                    currentBlock = await _repository.GetBlockwithHeight(currentBlock.Height - 1);
+                    currentBlockExistsInBlockchain = true;
+                    _unconfirmedTransactions.Clear();
+                }
+                else
+                {
+                    currentBlock = nextBlock;
+                    if (currentBlock != null)
+                    {
+                        await _blockProcessor.ProcessBlock(currentBlock);
+                        _unconfirmedTransactions.Clear();
+                    }
                 }
             } while (currentBlock != null);
-        }
-
-        private async Task ProcessBlock(Block block)
-        {
-            await _repository.AddBlock(block);
-            var accounts = await _repository.GetAccountsWithNxtId(block.InboundTransactions.Select(t => t.NxtRecipientId));
-            foreach (var inboundTransaction in block.InboundTransactions)
-            {
-                var account = accounts.SingleOrDefault(a => a.NxtAccountId == inboundTransaction.NxtRecipientId);
-                if (account != null)
-                {
-                    inboundTransaction.RecipientAccount = account;
-                    await _repository.AddTransaction(inboundTransaction);
-                }
-            }
-            throw new System.NotImplementedException();
-        }
-
-        private async Task<Block> Rollback(int height)
-        {
-            var block = await _repository.GetBlockOnHeight(height);
-            throw new System.NotImplementedException();
         }
     }
 }
