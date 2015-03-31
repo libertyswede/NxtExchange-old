@@ -1,4 +1,5 @@
-﻿using NxtExchange.DAL;
+﻿using System.Threading.Tasks;
+using NxtExchange.DAL;
 using NxtLib;
 
 namespace NxtExchange
@@ -9,7 +10,12 @@ namespace NxtExchange
 
         static void Main()
         {
-            var controller = new NxtController(new NxtRepository(), new NxtConnector(new ServiceFactory(NxtUri)));
+            var repository = new NxtRepository();
+            var transactionProcessor = new TransactionProcessor(repository);
+            var blockProcessor = new BlockProcessor(repository, transactionProcessor);
+            var connector = new NxtConnector(new ServiceFactory(NxtUri));
+            var controller = new NxtController(repository, connector, transactionProcessor, blockProcessor);
+            Task.WaitAll(controller.Start());
         }
     }
 }

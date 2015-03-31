@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using NxtExchange.DAL;
 
 namespace NxtExchange
@@ -21,7 +22,7 @@ namespace NxtExchange
 
         public async Task ProcessBlock(Block block)
         {
-            block.InboundTransactions = await _transactionProcessor.ProcessTransactions(block.InboundTransactions);
+            block.InboundTransactions = await _transactionProcessor.ProcessTransactions(block.InboundTransactions.ToList());
             await _repository.AddBlockIncludeTransactions(block);
         }
     }

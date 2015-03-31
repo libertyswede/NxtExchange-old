@@ -11,7 +11,9 @@ namespace NxtExchange.DAL
         Task<Block> GetLastBlock();
         Task<Block> GetBlockwithHeight(int height);
         Task<List<Account>>  GetAccountsWithNxtId(IEnumerable<long> nxtAccountIds);
+        Task<List<InboundTransaction>> GetUnconfirmedTransactions();
         Task RemoveBlockIncludingTransactions(int blockId);
+        Task AddTransactions(List<InboundTransaction> transactions);
     }
 
     public class NxtRepository : INxtRepository
@@ -26,6 +28,15 @@ namespace NxtExchange.DAL
                     transaction.Block = block;
                     context.InboundTransactions.Add(transaction);
                 }
+                await context.SaveChangesAsync();
+            }
+        }
+
+        public async Task AddTransactions(List<InboundTransaction> transactions)
+        {
+            using (var context = new NxtContext())
+            {
+                transactions.ForEach(t => context.InboundTransactions.Add(t));
                 await context.SaveChangesAsync();
             }
         }
@@ -51,6 +62,14 @@ namespace NxtExchange.DAL
             using (var context = new NxtContext())
             {
                 return await context.Accounts.Where(a => nxtAccountIds.Contains(a.NxtAccountId)).ToListAsync();
+            }
+        }
+
+        public async Task<List<InboundTransaction>> GetUnconfirmedTransactions()
+        {
+            using (var context = new NxtContext())
+            {
+                return await context.InboundTransactions.Where(t => t.BlockId == null).ToListAsync();
             }
         }
 

@@ -48,18 +48,18 @@ namespace NxtExchange.Test
         [ExpectedException(typeof(NxtException))]
         public async Task GetNextBlockShouldThrowOnUnknownBlock()
         {
-            _blockServiceMock
-                .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.QueryParameters["block"].Equals("123"))))
-                .ThrowsAsync(new NxtException(4, string.Empty, string.Empty, string.Empty));
+            //_blockServiceMock
+            //    .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.QueryParameters["block"].Equals("123"))))
+            //    .ThrowsAsync(new NxtException(4, string.Empty, string.Empty, string.Empty));
 
             await _nxtConnector.GetNextBlock(123);
         }
 
         private void SetupBlockService(ulong? expectedBlockId)
         {
-            _blockServiceMock
-                .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.QueryParameters["block"].Equals("123"))))
-                .ReturnsAsync(new GetBlockReply<ulong> {NextBlock = expectedBlockId});
+            //_blockServiceMock
+            //    .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.QueryParameters["block"].Equals("123"))))
+            //    .ReturnsAsync(new GetBlockReply<ulong> {NextBlock = expectedBlockId});
         }
     }
 }

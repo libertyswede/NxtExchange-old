@@ -62,9 +62,9 @@
     <Compile Include="DAL\NxtContext.cs" />
     <Compile Include="DAL\NxtRepository.cs" />
     <Compile Include="LongExtension.cs" />
-    <Compile Include="Migrations\201503261601307_InitialCreate.cs" />
-    <Compile Include="Migrations\201503261601307_InitialCreate.Designer.cs">
-      <DependentUpon>201503261601307_InitialCreate.cs</DependentUpon>
+    <Compile Include="Migrations\201503310518395_InitialCreate.cs" />
+    <Compile Include="Migrations\201503310518395_InitialCreate.Designer.cs">
+      <DependentUpon>201503310518395_InitialCreate.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="NxtConnector.cs" />
@@ -79,8 +79,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201503261601307_InitialCreate.resx">
-      <DependentUpon>201503261601307_InitialCreate.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201503310518395_InitialCreate.resx">
+      <DependentUpon>201503310518395_InitialCreate.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

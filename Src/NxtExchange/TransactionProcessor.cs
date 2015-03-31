@@ -7,7 +7,7 @@ namespace NxtExchange
 {
     public interface ITransactionProcessor
     {
-        Task<ICollection<InboundTransaction>> ProcessTransactions(ICollection<InboundTransaction> transactions);
+        Task<List<InboundTransaction>> ProcessTransactions(IList<InboundTransaction> transactions);
     }
 
     public class TransactionProcessor : ITransactionProcessor
@@ -18,7 +18,7 @@ namespace NxtExchange
             _repository = repository;
         }
 
-        public async Task<ICollection<InboundTransaction>> ProcessTransactions(ICollection<InboundTransaction> transactions)
+        public async Task<List<InboundTransaction>> ProcessTransactions(IList<InboundTransaction> transactions)
         {
             var filteredTransactions = new List<InboundTransaction>();
             var accounts = await _repository.GetAccountsWithNxtId(transactions.Select(t => t.NxtRecipientId));

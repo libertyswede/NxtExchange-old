@@ -22,7 +22,7 @@ namespace NxtExchange.DAL
         public DateTime Timestamp { get; set; }
         public long AmountNqt { get; set; }
         public TransactionStatus Status { get; set; }
-        public int BlockId { get; set; }
+        public int? BlockId { get; set; }
         public virtual Block Block { get; set; }
         public long NxtRecipientId { get; set; }
         public long NxtSenderId { get; set; }
