@@ -1,12 +1,11 @@
 ﻿using System.Linq;
-using System.Threading.Tasks;
 using NxtExchange.DAL;
 
 namespace NxtExchange
 {
     public interface IBlockProcessor
     {
-        Task<Block> ProcessBlock(Block block);
+        Block ProcessBlock(Block block);
     }
 
     public class BlockProcessor : IBlockProcessor
@@ -20,10 +19,10 @@ namespace NxtExchange
             _transactionProcessor = transactionProcessor;
         }
 
-        public async Task<Block> ProcessBlock(Block block)
+        public Block ProcessBlock(Block block)
         {
-            block.InboundTransactions = await _transactionProcessor.ProcessTransactions(block.InboundTransactions.ToList());
-            await _repository.AddBlockIncludeTransactions(block);
+            block.InboundTransactions = _transactionProcessor.ProcessTransactions(block.InboundTransactions.ToList());
+            _repository.AddBlockIncludeTransactions(block);
             return block;
         }
     }

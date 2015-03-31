@@ -23,18 +23,13 @@ namespace NxtExchange
             _blockProcessor = blockProcessor;
         }
 
-        private async Task Init()
-        {
-            _lastKnownBlock = await _repository.GetLastBlock();
-        }
-
-        public async Task Start(CancellationToken cancellationToken)
+        public void Start(CancellationToken cancellationToken)
         {
             try
             {
-                await Init();
-                await ScanBlockchain(cancellationToken);
-                await CheckForNewTransactions(cancellationToken);
+                Init();
+                ScanBlockchain(cancellationToken);
+                CheckForNewTransactions(cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -42,22 +37,12 @@ namespace NxtExchange
             }
         }
 
-        private async Task CheckForNewTransactions(CancellationToken cancellationToken)
+        private void Init()
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await ScanBlockchain(cancellationToken);
-                var transactions = await _nxtConnector.GetUnconfirmedTransactions();
-                var existingTransactions = await _repository.GetUnconfirmedTransactions();
-                var newTransactions = transactions.Where(t => existingTransactions.All(et => t.NxtTransactionId != et.NxtTransactionId)).ToList();
-                newTransactions = await _transactionProcessor.ProcessTransactions(newTransactions);
-                await _repository.AddTransactions(newTransactions);
-
-                await Task.Delay(new TimeSpan(0, 0, 10), cancellationToken);
-            }
+            _lastKnownBlock = _repository.GetLastBlock();
         }
 
-        private async Task ScanBlockchain(CancellationToken cancellationToken)
+        private void ScanBlockchain(CancellationToken cancellationToken)
         {
             var currentBlock = _lastKnownBlock;
             var currentBlockExistsInBlockchain = true;
@@ -67,7 +52,7 @@ namespace NxtExchange
             {
                 try
                 {
-                    nextBlock = await _nxtConnector.GetNextBlock(currentBlock.NxtBlockId.ToUnsigned());
+                    nextBlock = _nxtConnector.GetNextBlock(currentBlock.NxtBlockId.ToUnsigned());
                 }
                 catch (NxtException e)
                 {
@@ -82,8 +67,8 @@ namespace NxtExchange
                 }
                 if (!currentBlockExistsInBlockchain)
                 {
-                    await _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
-                    currentBlock = await _repository.GetBlockOnHeight(currentBlock.Height - 1);
+                    _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
+                    currentBlock = _repository.GetBlockOnHeight(currentBlock.Height - 1);
                     currentBlockExistsInBlockchain = true;
                 }
                 else
@@ -91,10 +76,25 @@ namespace NxtExchange
                     currentBlock = nextBlock;
                     if (currentBlock != null)
                     {
-                        _lastKnownBlock = await _blockProcessor.ProcessBlock(currentBlock);
+                        _lastKnownBlock = _blockProcessor.ProcessBlock(currentBlock);
                     }
                 }
             } while (currentBlock != null && !cancellationToken.IsCancellationRequested);
+        }
+
+        private void CheckForNewTransactions(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                ScanBlockchain(cancellationToken);
+                var transactions = _nxtConnector.GetUnconfirmedTransactions();
+                var existingTransactions = _repository.GetUnconfirmedTransactions();
+                var newTransactions = transactions.Where(t => existingTransactions.All(et => t.NxtTransactionId != et.NxtTransactionId)).ToList();
+                newTransactions = _transactionProcessor.ProcessTransactions(newTransactions);
+                _repository.AddTransactions(newTransactions);
+
+                Task.Delay(new TimeSpan(0, 0, 10), cancellationToken).Wait(cancellationToken);
+            }
         }
     }
 }

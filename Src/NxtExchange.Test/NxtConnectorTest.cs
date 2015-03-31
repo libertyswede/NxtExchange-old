@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using NxtLib;
@@ -24,35 +23,35 @@ namespace NxtExchange.Test
         }
 
         [TestMethod]
-        public async Task GetNextBlockShouldReturnNextBlock()
+        public void GetNextBlockShouldReturnNextBlock()
         {
             const ulong expectedBlockId = (ulong)Int64.MaxValue + 3;
             SetupBlockService(expectedBlockId);
 
-            var nextBlock = await _nxtConnector.GetNextBlock(123);
+            var nextBlock = _nxtConnector.GetNextBlock(123);
 
             Assert.AreEqual(expectedBlockId, nextBlock.NxtBlockId.ToUnsigned());
         }
 
         [TestMethod]
-        public async Task GetNextBlockShouldReturnNullWhenLastKnownBlock()
+        public void GetNextBlockShouldReturnNullWhenLastKnownBlock()
         {
             SetupBlockService(null);
 
-            var nextBlock = await _nxtConnector.GetNextBlock(123);
+            var nextBlock = _nxtConnector.GetNextBlock(123);
 
             Assert.IsNull(nextBlock);
         }
 
         [TestMethod]
         [ExpectedException(typeof(NxtException))]
-        public async Task GetNextBlockShouldThrowOnUnknownBlock()
+        public void GetNextBlockShouldThrowOnUnknownBlock()
         {
             //_blockServiceMock
             //    .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.QueryParameters["block"].Equals("123"))))
             //    .ThrowsAsync(new NxtException(4, string.Empty, string.Empty, string.Empty));
 
-            await _nxtConnector.GetNextBlock(123);
+            _nxtConnector.GetNextBlock(123);
         }
 
         private void SetupBlockService(ulong? expectedBlockId)

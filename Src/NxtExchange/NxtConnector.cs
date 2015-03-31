@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using NxtExchange.DAL;
 using NxtLib;
 using NxtLib.Blocks;
@@ -10,8 +9,8 @@ namespace NxtExchange
 {
     public interface INxtConnector
     {
-        Task<Block> GetNextBlock(ulong blockId);
-        Task<List<InboundTransaction>>  GetUnconfirmedTransactions();
+        Block GetNextBlock(ulong blockId);
+        List<InboundTransaction>  GetUnconfirmedTransactions();
     }
 
     public class NxtConnector : INxtConnector
@@ -23,13 +22,13 @@ namespace NxtExchange
             _blockService = serviceFactory.CreateBlockService();
         }
 
-        public async Task<Block> GetNextBlock(ulong blockId)
+        public Block GetNextBlock(ulong blockId)
         {
             Block block = null;
-            var getBlockResult = await _blockService.GetBlock(BlockLocator.BlockId(blockId));
+            var getBlockResult = _blockService.GetBlock(BlockLocator.BlockId(blockId)).Result;
             if (getBlockResult.NextBlock.HasValue)
             {
-                var nextBlockResult = await _blockService.GetBlockIncludeTransactions(BlockLocator.BlockId(getBlockResult.NextBlock.Value));
+                var nextBlockResult = _blockService.GetBlockIncludeTransactions(BlockLocator.BlockId(getBlockResult.NextBlock.Value)).Result;
                 block = new Block
                 {
                     Height = nextBlockResult.Height,
@@ -42,7 +41,7 @@ namespace NxtExchange
             return block;
         }
 
-        public Task<List<InboundTransaction>> GetUnconfirmedTransactions()
+        public List<InboundTransaction> GetUnconfirmedTransactions()
         {
             throw new System.NotImplementedException();
         }

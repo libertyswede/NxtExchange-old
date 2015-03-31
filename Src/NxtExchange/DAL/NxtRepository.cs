@@ -1,61 +1,60 @@
 ﻿using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace NxtExchange.DAL
 {
     public interface INxtRepository
     {
-        Task<Block> GetLastBlock();
-        Task<Block> GetBlockOnHeight(int height);
-        Task<List<Account>> GetAccountsWithNxtId(IEnumerable<long> nxtAccountIds);
-        Task<List<InboundTransaction>> GetUnconfirmedTransactions();
-        Task AddBlockIncludeTransactions(Block block);
-        Task AddTransactions(List<InboundTransaction> transactions);
-        Task RemoveBlockIncludingTransactions(int blockId);
+        Block GetLastBlock();
+        Block GetBlockOnHeight(int height);
+        List<Account> GetAccountsWithNxtId(IEnumerable<long> nxtAccountIds);
+        List<InboundTransaction> GetUnconfirmedTransactions();
+        void AddBlockIncludeTransactions(Block block);
+        void AddTransactions(List<InboundTransaction> transactions);
+        void RemoveBlockIncludingTransactions(int blockId);
     }
 
     public class NxtRepository : INxtRepository
     {
-        public async Task<Block> GetLastBlock()
+        public Block GetLastBlock()
         {
             using (var context = new NxtContext())
             {
-                return await context.Blocks
+                return context.Blocks
                     .Include(b => b.InboundTransactions)
                     .OrderByDescending(b => b.Height)
-                    .FirstAsync();
+                    .First();
             }
         }
 
-        public async Task<Block> GetBlockOnHeight(int height)
+        public Block GetBlockOnHeight(int height)
         {
             using (var context = new NxtContext())
             {
-                return await context.Blocks
+                return context.Blocks
                     .Include(b => b.InboundTransactions)
-                    .SingleOrDefaultAsync(b => b.Height == height);
+                    .SingleOrDefault(b => b.Height == height);
             }
         }
 
-        public async Task<List<Account>> GetAccountsWithNxtId(IEnumerable<long> nxtAccountIds)
+        public List<Account> GetAccountsWithNxtId(IEnumerable<long> nxtAccountIds)
         {
             using (var context = new NxtContext())
             {
-                return await context.Accounts.Where(a => nxtAccountIds.Contains(a.NxtAccountId)).ToListAsync();
+                return context.Accounts.Where(a => nxtAccountIds.Contains(a.NxtAccountId)).ToList();
             }
         }
 
-        public async Task<List<InboundTransaction>> GetUnconfirmedTransactions()
+        public List<InboundTransaction> GetUnconfirmedTransactions()
         {
             using (var context = new NxtContext())
             {
-                return await context.InboundTransactions.Where(t => t.BlockId == null).ToListAsync();
+                return context.InboundTransactions.Where(t => t.BlockId == null).ToList();
             }
         }
 
-        public async Task AddBlockIncludeTransactions(Block block)
+        public void AddBlockIncludeTransactions(Block block)
         {
             using (var context = new NxtContext())
             {
@@ -65,31 +64,31 @@ namespace NxtExchange.DAL
                     transaction.Block = block;
                     context.InboundTransactions.Add(transaction);
                 }
-                await context.SaveChangesAsync();
+                context.SaveChanges();
             }
         }
 
-        public async Task AddTransactions(List<InboundTransaction> transactions)
+        public void AddTransactions(List<InboundTransaction> transactions)
         {
             using (var context = new NxtContext())
             {
                 transactions.ForEach(t => context.InboundTransactions.Add(t));
-                await context.SaveChangesAsync();
+                context.SaveChanges();
             }
         }
 
-        public async Task RemoveBlockIncludingTransactions(int blockId)
+        public void RemoveBlockIncludingTransactions(int blockId)
         {
             using (var context = new NxtContext())
             {
-                var transactions = await context.InboundTransactions.Where(t => t.BlockId == blockId).ToListAsync();
+                var transactions = context.InboundTransactions.Where(t => t.BlockId == blockId).ToList();
                 transactions.ForEach(t => context.InboundTransactions.Remove(t));
 
                 var block = new Block {Id = blockId};
                 context.Blocks.Attach(block);
                 context.Blocks.Remove(block);
                 
-                await context.SaveChangesAsync();
+                context.SaveChanges();
             }
         }
     }

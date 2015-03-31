@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using NxtExchange.DAL;
 
 namespace NxtExchange
 {
     public interface ITransactionProcessor
     {
-        Task<List<InboundTransaction>> ProcessTransactions(IList<InboundTransaction> transactions);
+        List<InboundTransaction> ProcessTransactions(IList<InboundTransaction> transactions);
     }
 
     public class TransactionProcessor : ITransactionProcessor
@@ -18,10 +17,10 @@ namespace NxtExchange
             _repository = repository;
         }
 
-        public async Task<List<InboundTransaction>> ProcessTransactions(IList<InboundTransaction> transactions)
+        public List<InboundTransaction> ProcessTransactions(IList<InboundTransaction> transactions)
         {
             var filteredTransactions = new List<InboundTransaction>();
-            var accounts = await _repository.GetAccountsWithNxtId(transactions.Select(t => t.NxtRecipientId));
+            var accounts = _repository.GetAccountsWithNxtId(transactions.Select(t => t.NxtRecipientId));
             foreach (var transaction in transactions)
             {
                 var account = accounts.SingleOrDefault(a => a.NxtAccountId == transaction.NxtRecipientId);
