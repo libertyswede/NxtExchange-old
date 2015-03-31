@@ -6,7 +6,7 @@ namespace NxtExchange
 {
     public interface IBlockProcessor
     {
-        Task ProcessBlock(Block block);
+        Task<Block> ProcessBlock(Block block);
     }
 
     public class BlockProcessor : IBlockProcessor
@@ -20,10 +20,11 @@ namespace NxtExchange
             _transactionProcessor = transactionProcessor;
         }
 
-        public async Task ProcessBlock(Block block)
+        public async Task<Block> ProcessBlock(Block block)
         {
             block.InboundTransactions = await _transactionProcessor.ProcessTransactions(block.InboundTransactions.ToList());
             await _repository.AddBlockIncludeTransactions(block);
+            return block;
         }
     }
 }

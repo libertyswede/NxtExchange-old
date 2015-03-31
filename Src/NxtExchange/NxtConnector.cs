@@ -50,7 +50,10 @@ namespace NxtExchange
         private ICollection<InboundTransaction> CreateInboundTransactions(List<Transaction> transactions)
         {
             var inboundTransactions = new List<InboundTransaction>();
-            foreach (var transaction in transactions.Where(t => t.SubType == TransactionSubType.PaymentOrdinaryPayment && t.Amount.Nqt > 0))
+            foreach (var transaction in transactions.Where(t => 
+                t.SubType == TransactionSubType.PaymentOrdinaryPayment && 
+                t.Amount.Nqt > 0 && 
+                t.Recipient.HasValue))
             {
                 Debug.Assert(transaction.TransactionId != null, "transaction.TransactionId != null");
 

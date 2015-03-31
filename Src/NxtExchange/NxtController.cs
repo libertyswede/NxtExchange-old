@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NxtExchange.DAL;
 using NxtLib;
@@ -27,29 +28,38 @@ namespace NxtExchange
             _lastKnownBlock = await _repository.GetLastBlock();
         }
 
-        public async Task Start()
+        public async Task Start(CancellationToken cancellationToken)
         {
-            await Init();
-            await TraverseToLatestBlock(_lastKnownBlock);
-            await CheckForNewTransactions();
+            try
+            {
+                await Init();
+                await ScanBlockchain(cancellationToken);
+                await CheckForNewTransactions(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // cancellationToken was cancelled, ignore this exception
+            }
         }
 
-        private async Task CheckForNewTransactions()
+        private async Task CheckForNewTransactions(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                await TraverseToLatestBlock(_lastKnownBlock);
+                await ScanBlockchain(cancellationToken);
                 var transactions = await _nxtConnector.GetUnconfirmedTransactions();
                 var existingTransactions = await _repository.GetUnconfirmedTransactions();
                 var newTransactions = transactions.Where(t => existingTransactions.All(et => t.NxtTransactionId != et.NxtTransactionId)).ToList();
                 newTransactions = await _transactionProcessor.ProcessTransactions(newTransactions);
                 await _repository.AddTransactions(newTransactions);
-                await Task.Delay(new TimeSpan(0, 0, 10));
+
+                await Task.Delay(new TimeSpan(0, 0, 10), cancellationToken);
             }
         }
 
-        private async Task TraverseToLatestBlock(Block currentBlock)
+        private async Task ScanBlockchain(CancellationToken cancellationToken)
         {
+            var currentBlock = _lastKnownBlock;
             var currentBlockExistsInBlockchain = true;
             Block nextBlock = null;
             
@@ -73,7 +83,7 @@ namespace NxtExchange
                 if (!currentBlockExistsInBlockchain)
                 {
                     await _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
-                    currentBlock = await _repository.GetBlockwithHeight(currentBlock.Height - 1);
+                    currentBlock = await _repository.GetBlockOnHeight(currentBlock.Height - 1);
                     currentBlockExistsInBlockchain = true;
                 }
                 else
@@ -81,10 +91,10 @@ namespace NxtExchange
                     currentBlock = nextBlock;
                     if (currentBlock != null)
                     {
-                        await _blockProcessor.ProcessBlock(currentBlock);
+                        _lastKnownBlock = await _blockProcessor.ProcessBlock(currentBlock);
                     }
                 }
-            } while (currentBlock != null);
+            } while (currentBlock != null && !cancellationToken.IsCancellationRequested);
         }
     }
 }

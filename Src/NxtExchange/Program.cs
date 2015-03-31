@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using NxtExchange.DAL;
 using NxtLib;
 
@@ -15,7 +17,14 @@ namespace NxtExchange
             var blockProcessor = new BlockProcessor(repository, transactionProcessor);
             var connector = new NxtConnector(new ServiceFactory(NxtUri));
             var controller = new NxtController(repository, connector, transactionProcessor, blockProcessor);
-            Task.WaitAll(controller.Start());
+
+            var cts = new CancellationTokenSource();
+            Task.Factory.StartNew(() => controller.Start(cts.Token), TaskCreationOptions.LongRunning);
+
+            Console.WriteLine("Press enter to exit");
+            Console.ReadLine();
+            Console.WriteLine("Shutting down executing NxtController task... ");
+            cts.Cancel();
         }
     }
 }
