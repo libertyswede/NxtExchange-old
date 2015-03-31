@@ -28,10 +28,10 @@ namespace NxtExchange
         public Block GetNextBlock(ulong blockId)
         {
             Block block = null;
-            var getBlockResult = _blockService.GetBlock(BlockLocator.BlockId(blockId)).Result;
+            var getBlockResult = _blockService.GetBlock(BlockLocator.ByBlockId(blockId)).Result;
             if (getBlockResult.NextBlock.HasValue)
             {
-                var nextBlockResult = _blockService.GetBlockIncludeTransactions(BlockLocator.BlockId(getBlockResult.NextBlock.Value)).Result;
+                var nextBlockResult = _blockService.GetBlockIncludeTransactions(BlockLocator.ByBlockId(getBlockResult.NextBlock.Value)).Result;
                 block = new Block
                 {
                     Height = nextBlockResult.Height,

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using NxtLib;
@@ -25,8 +26,13 @@ namespace NxtExchange.Test
         [TestMethod]
         public void GetNextBlockShouldReturnNextBlock()
         {
-            const ulong expectedBlockId = (ulong)Int64.MaxValue + 3;
-            SetupBlockService(expectedBlockId);
+            const ulong expectedBlockId = 234;
+            _blockServiceMock
+                .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.BlockId == 123)))
+                .ReturnsAsync(new GetBlockReply<ulong> { NextBlock = expectedBlockId });
+            _blockServiceMock
+                .Setup(s => s.GetBlockIncludeTransactions(It.Is<BlockLocator>(l => l.BlockId == expectedBlockId)))
+                .ReturnsAsync(new GetBlockReply<Transaction> { BlockId = expectedBlockId, Transactions = new List<Transaction>() });
 
             var nextBlock = _nxtConnector.GetNextBlock(123);
 
@@ -36,7 +42,9 @@ namespace NxtExchange.Test
         [TestMethod]
         public void GetNextBlockShouldReturnNullWhenLastKnownBlock()
         {
-            SetupBlockService(null);
+            _blockServiceMock
+                .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.BlockId == 123)))
+                .ReturnsAsync(new GetBlockReply<ulong> { NextBlock = null });
 
             var nextBlock = _nxtConnector.GetNextBlock(123);
 
@@ -44,21 +52,25 @@ namespace NxtExchange.Test
         }
 
         [TestMethod]
-        [ExpectedException(typeof(NxtException))]
         public void GetNextBlockShouldThrowOnUnknownBlock()
         {
-            //_blockServiceMock
-            //    .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.QueryParameters["block"].Equals("123"))))
-            //    .ThrowsAsync(new NxtException(4, string.Empty, string.Empty, string.Empty));
+            _blockServiceMock
+                .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.BlockId == 123)))
+                .ThrowsAsync(new NxtException(4, string.Empty, string.Empty, string.Empty));
 
-            _nxtConnector.GetNextBlock(123);
-        }
+            try
+            {
+                _nxtConnector.GetNextBlock(123);
+            }
+            catch (AggregateException ae)
+            {
+                if (ae.InnerException.GetType() == typeof(NxtException))
+                {
+                    return;
+                }
+            }
 
-        private void SetupBlockService(ulong? expectedBlockId)
-        {
-            //_blockServiceMock
-            //    .Setup(s => s.GetBlock(It.Is<BlockLocator>(l => l.QueryParameters["block"].Equals("123"))))
-            //    .ReturnsAsync(new GetBlockReply<ulong> {NextBlock = expectedBlockId});
+            Assert.Fail("There was no NxtException.");
         }
     }
 }
