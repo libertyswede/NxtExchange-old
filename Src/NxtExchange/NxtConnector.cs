@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using NxtExchange.DAL;
 using NxtLib;
+using NxtLib.Accounts;
 using NxtLib.Blocks;
 
 namespace NxtExchange
@@ -10,16 +11,18 @@ namespace NxtExchange
     public interface INxtConnector
     {
         Block GetNextBlock(ulong blockId);
-        List<InboundTransaction>  GetUnconfirmedTransactions();
+        ICollection<InboundTransaction> GetUnconfirmedTransactions();
     }
 
     public class NxtConnector : INxtConnector
     {
         private readonly IBlockService _blockService;
+        private readonly IAccountService _accountService;
 
         public NxtConnector(IServiceFactory serviceFactory)
         {
             _blockService = serviceFactory.CreateBlockService();
+            _accountService = serviceFactory.CreateAccountService();
         }
 
         public Block GetNextBlock(ulong blockId)
@@ -41,12 +44,13 @@ namespace NxtExchange
             return block;
         }
 
-        public List<InboundTransaction> GetUnconfirmedTransactions()
+        public ICollection<InboundTransaction> GetUnconfirmedTransactions()
         {
-            throw new System.NotImplementedException();
+            var unconfirmedTransactions = _accountService.GetUnconfirmedTransactions().Result;
+            return CreateInboundTransactions(unconfirmedTransactions.UnconfirmedTransactions);
         }
 
-        private ICollection<InboundTransaction> CreateInboundTransactions(List<Transaction> transactions)
+        private static ICollection<InboundTransaction> CreateInboundTransactions(IEnumerable<Transaction> transactions)
         {
             var inboundTransactions = new List<InboundTransaction>();
             foreach (var transaction in transactions.Where(t => 

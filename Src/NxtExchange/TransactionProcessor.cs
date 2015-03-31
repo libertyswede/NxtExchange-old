@@ -12,6 +12,7 @@ namespace NxtExchange
     public class TransactionProcessor : ITransactionProcessor
     {
         private readonly INxtRepository _repository;
+
         public TransactionProcessor(INxtRepository repository)
         {
             _repository = repository;
