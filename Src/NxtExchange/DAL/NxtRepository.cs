@@ -55,27 +55,44 @@ namespace NxtExchange.DAL
             }
         }
 
+        public List<InboundTransaction> GetTransactionsByNxtId(IEnumerable<long> transactionIds)
+        {
+            using (var context = new NxtContext())
+            {
+                return context.InboundTransactions.Where(t => transactionIds.Contains(t.NxtTransactionId)).ToList();
+            }
+        }
+
         public void AddBlockIncludeTransactions(Block block)
         {
             using (var context = new NxtContext())
             {
+                RemoveUnconfirmedTransactions(context);
                 context.Blocks.Add(block);
-                foreach (var transaction in block.InboundTransactions)
-                {
-                    transaction.Block = block;
-                    context.InboundTransactions.Add(transaction);
-                }
+                block.InboundTransactions.ToList().ForEach(t => t.Block = block);
+                AddTransactions(block.InboundTransactions.ToList(), context);
                 context.SaveChanges();
             }
+        }
+
+        private static void RemoveUnconfirmedTransactions(NxtContext context)
+        {
+            var unconfirmedTransactions = context.InboundTransactions.Where(t => t.BlockId == null).ToList();
+            unconfirmedTransactions.ForEach(t => context.InboundTransactions.Remove(t));
         }
 
         public void AddTransactions(List<InboundTransaction> transactions)
         {
             using (var context = new NxtContext())
             {
-                transactions.ForEach(t => context.InboundTransactions.Add(t));
-                context.SaveChanges();
+                AddTransactions(transactions, context);
             }
+        }
+
+        private static void AddTransactions(List<InboundTransaction> transactions, NxtContext context)
+        {
+            transactions.ForEach(t => context.InboundTransactions.Add(t));
+            context.SaveChanges();
         }
 
         public void RemoveBlockIncludingTransactions(int blockId)
@@ -90,14 +107,6 @@ namespace NxtExchange.DAL
                 context.Blocks.Remove(block);
                 
                 context.SaveChanges();
-            }
-        }
-
-        public List<InboundTransaction> GetTransactionsByNxtId(IEnumerable<long> transactionIds)
-        {
-            using (var context = new NxtContext())
-            {
-                return context.InboundTransactions.Where(t => transactionIds.Contains(t.NxtTransactionId)).ToList();
             }
         }
     }

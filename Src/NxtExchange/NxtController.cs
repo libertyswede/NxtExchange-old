@@ -24,8 +24,6 @@ namespace NxtExchange
             try
             {
                 Init();
-                throw new Exception("test");
-                ScanBlockchain(cancellationToken);
                 CheckForNewTransactions(cancellationToken);
             }
             catch (OperationCanceledException)
@@ -37,6 +35,18 @@ namespace NxtExchange
         private void Init()
         {
             _lastKnownBlock = _repository.GetLastBlock();
+        }
+
+        private void CheckForNewTransactions(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                ScanBlockchain(cancellationToken);
+                var transactions = _nxtConnector.GetNewUnconfirmedTransactions();
+                _repository.AddTransactions(transactions);
+
+                Task.Delay(new TimeSpan(0, 0, 2), cancellationToken).Wait(cancellationToken);
+            }
         }
 
         private void ScanBlockchain(CancellationToken cancellationToken)
@@ -57,13 +67,6 @@ namespace NxtExchange
             }
         }
 
-        private Block Rollback(Block currentBlock)
-        {
-            _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
-            var previousBlock = _repository.GetBlockOnHeight(currentBlock.Height - 1);
-            return previousBlock;
-        }
-
         private Block TryAddNextBlock(Block currentBlock)
         {
             var nextBlock = _nxtConnector.GetNextBlock(currentBlock.NxtBlockId.ToUnsigned());
@@ -74,16 +77,11 @@ namespace NxtExchange
             return nextBlock;
         }
 
-        private void CheckForNewTransactions(CancellationToken cancellationToken)
+        private Block Rollback(Block currentBlock)
         {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                ScanBlockchain(cancellationToken);
-                var transactions = _nxtConnector.GetNewUnconfirmedTransactions();
-                _repository.AddTransactions(transactions);
-
-                Task.Delay(new TimeSpan(0, 0, 10), cancellationToken).Wait(cancellationToken);
-            }
+            _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
+            var previousBlock = _repository.GetBlockOnHeight(currentBlock.Height - 1);
+            return previousBlock;
         }
     }
 }

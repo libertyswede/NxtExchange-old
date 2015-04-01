@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using NxtExchange.DAL;
@@ -19,15 +20,29 @@ namespace NxtExchange
             var controller = new NxtController(repository, connector, transactionProcessor);
 
             var cts = new CancellationTokenSource();
-            var task = new Task(() => controller.Start(cts.Token), cts.Token, TaskCreationOptions.LongRunning);
-            // någonting om exception handling
-
-            Task.Factory.StartNew(() => controller.Start(cts.Token), TaskCreationOptions.LongRunning);
+            Task.Factory.StartNew(() => controller.Start(cts.Token), TaskCreationOptions.LongRunning)
+                .ContinueWith(HandleException, TaskContinuationOptions.OnlyOnFaulted)
+                .ContinueWith(TaskFinished, TaskContinuationOptions.NotOnFaulted);
 
             Console.WriteLine("Press enter to exit");
             Console.ReadLine();
             Console.WriteLine("Shutting down executing NxtController task... ");
             cts.Cancel();
+        }
+
+        private static void TaskFinished(Task task)
+        {
+            Environment.Exit(0);
+        }
+
+        private static void HandleException(Task task)
+        {
+            Debug.Assert(task.Exception != null, "task.Exception != null");
+
+            foreach (var exception in task.Exception.InnerExceptions)
+            {
+                Console.WriteLine("Unhandled exception: " + exception.Message);
+            }
         }
     }
 }
