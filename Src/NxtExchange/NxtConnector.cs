@@ -16,11 +16,15 @@ namespace NxtExchange
 
     public class NxtConnector : INxtConnector
     {
+        private readonly IBlockProcessor _blockProcessor;
+        private readonly ITransactionProcessor _transactionProcessor;
         private readonly IBlockService _blockService;
         private readonly IAccountService _accountService;
 
-        public NxtConnector(IServiceFactory serviceFactory)
+        public NxtConnector(IServiceFactory serviceFactory, IBlockProcessor blockProcessor, ITransactionProcessor transactionProcessor)
         {
+            _blockProcessor = blockProcessor;
+            _transactionProcessor = transactionProcessor;
             _blockService = serviceFactory.CreateBlockService();
             _accountService = serviceFactory.CreateAccountService();
         }
@@ -32,14 +36,7 @@ namespace NxtExchange
             if (getBlockResult.NextBlock.HasValue)
             {
                 var nextBlockResult = _blockService.GetBlockIncludeTransactions(BlockLocator.ByBlockId(getBlockResult.NextBlock.Value)).Result;
-                block = new Block
-                {
-                    Height = nextBlockResult.Height,
-                    Timestamp = nextBlockResult.Timestamp,
-                    InboundTransactions = CreateInboundTransactions(nextBlockResult.Transactions),
-                    NxtBlockId = nextBlockResult.BlockId.ToSigned()
-                };
-                block.InboundTransactions.ToList().ForEach(t => t.Block = block);
+                block = _blockProcessor.ConvertBlockAndTransactions(nextBlockResult);
             }
             return block;
         }
@@ -47,32 +44,7 @@ namespace NxtExchange
         public ICollection<InboundTransaction> GetUnconfirmedTransactions()
         {
             var unconfirmedTransactions = _accountService.GetUnconfirmedTransactions().Result;
-            return CreateInboundTransactions(unconfirmedTransactions.UnconfirmedTransactions);
-        }
-
-        private static ICollection<InboundTransaction> CreateInboundTransactions(IEnumerable<Transaction> transactions)
-        {
-            var inboundTransactions = new List<InboundTransaction>();
-            foreach (var transaction in transactions.Where(t => 
-                t.SubType == TransactionSubType.PaymentOrdinaryPayment && 
-                t.Amount.Nqt > 0 && 
-                t.Recipient.HasValue))
-            {
-                Debug.Assert(transaction.TransactionId != null, "transaction.TransactionId != null");
-
-                var inboundTransaction = new InboundTransaction
-                {
-                    AmountNqt = transaction.Amount.Nqt,
-                    Timestamp = transaction.Timestamp,
-                    NxtTransactionId = transaction.TransactionId.ToSigned(),
-                    NxtRecipientId = transaction.Recipient.ToSigned(),
-                    NxtSenderId = transaction.Sender.ToSigned(),
-                    Status = TransactionStatusCalculator.GetStatus(transaction)
-                };
-
-                inboundTransactions.Add(inboundTransaction);
-            }
-            return inboundTransactions;
+            return _transactionProcessor.ConvertToInboundTransactions(unconfirmedTransactions.UnconfirmedTransactions);
         }
     }
 }

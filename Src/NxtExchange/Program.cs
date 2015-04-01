@@ -15,7 +15,7 @@ namespace NxtExchange
             var repository = new NxtRepository();
             var transactionProcessor = new TransactionProcessor(repository);
             var blockProcessor = new BlockProcessor(repository, transactionProcessor);
-            var connector = new NxtConnector(new ServiceFactory(NxtUri));
+            var connector = new NxtConnector(new ServiceFactory(NxtUri), blockProcessor, transactionProcessor);
             var controller = new NxtController(repository, connector, transactionProcessor, blockProcessor);
 
             var cts = new CancellationTokenSource();

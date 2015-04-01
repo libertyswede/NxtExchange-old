@@ -5,7 +5,7 @@ namespace NxtExchange
 {
     public interface IBlockProcessor
     {
-        Block ProcessBlock(Block block);
+        Block ConvertBlockAndTransactions(NxtLib.Block<NxtLib.Transaction> nxtBlock);
     }
 
     public class BlockProcessor : IBlockProcessor
@@ -19,10 +19,19 @@ namespace NxtExchange
             _transactionProcessor = transactionProcessor;
         }
 
-        public Block ProcessBlock(Block block)
+        public Block ConvertBlockAndTransactions(NxtLib.Block<NxtLib.Transaction> nxtBlock)
         {
-            block.InboundTransactions = _transactionProcessor.ProcessTransactions(block.InboundTransactions.ToList());
-            _repository.AddBlockIncludeTransactions(block);
+            var transactions = _transactionProcessor.ConvertToInboundTransactions(nxtBlock.Transactions);
+            transactions = _transactionProcessor.FilterTransactionsBasedOnKnownAccounts(transactions);
+
+            var block = new Block
+            {
+                Height = nxtBlock.Height,
+                Timestamp = nxtBlock.Timestamp,
+                InboundTransactions = transactions,
+                NxtBlockId = nxtBlock.BlockId.ToSigned()
+            };
+            block.InboundTransactions.ToList().ForEach(t => t.Block = block);
             return block;
         }
     }

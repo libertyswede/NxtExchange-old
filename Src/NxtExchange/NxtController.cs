@@ -76,7 +76,8 @@ namespace NxtExchange
                     currentBlock = nextBlock;
                     if (currentBlock != null)
                     {
-                        _lastKnownBlock = _blockProcessor.ProcessBlock(currentBlock);
+                        _repository.AddBlockIncludeTransactions(currentBlock);
+                        _lastKnownBlock = currentBlock;
                     }
                 }
             } while (currentBlock != null && !cancellationToken.IsCancellationRequested);
@@ -90,7 +91,7 @@ namespace NxtExchange
                 var transactions = _nxtConnector.GetUnconfirmedTransactions();
                 var existingTransactions = _repository.GetUnconfirmedTransactions();
                 var newTransactions = transactions.Where(t => existingTransactions.All(et => t.NxtTransactionId != et.NxtTransactionId)).ToList();
-                newTransactions = _transactionProcessor.ProcessTransactions(newTransactions);
+                newTransactions = _transactionProcessor.FilterTransactionsBasedOnKnownAccounts(newTransactions);
                 _repository.AddTransactions(newTransactions);
 
                 Task.Delay(new TimeSpan(0, 0, 10), cancellationToken).Wait(cancellationToken);
