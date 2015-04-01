@@ -14,11 +14,13 @@ namespace NxtExchange
         {
             var repository = new NxtRepository();
             var transactionProcessor = new TransactionProcessor(repository);
-            var blockProcessor = new BlockProcessor(repository, transactionProcessor);
+            var blockProcessor = new BlockProcessor(transactionProcessor);
             var connector = new NxtConnector(new ServiceFactory(NxtUri), blockProcessor, transactionProcessor);
-            var controller = new NxtController(repository, connector, transactionProcessor, blockProcessor);
+            var controller = new NxtController(repository, connector, transactionProcessor);
 
             var cts = new CancellationTokenSource();
+            Task controllerTask = new Task(controller.Start(cts.Token));
+
             Task.Factory.StartNew(() => controller.Start(cts.Token), TaskCreationOptions.LongRunning);
 
             Console.WriteLine("Press enter to exit");

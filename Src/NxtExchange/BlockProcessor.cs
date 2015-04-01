@@ -10,12 +10,10 @@ namespace NxtExchange
 
     public class BlockProcessor : IBlockProcessor
     {
-        private readonly INxtRepository _repository;
         private readonly ITransactionProcessor _transactionProcessor;
 
-        public BlockProcessor(INxtRepository repository, ITransactionProcessor transactionProcessor)
+        public BlockProcessor(ITransactionProcessor transactionProcessor)
         {
-            _repository = repository;
             _transactionProcessor = transactionProcessor;
         }
 

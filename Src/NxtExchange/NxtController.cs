@@ -12,15 +12,13 @@ namespace NxtExchange
         private readonly INxtRepository _repository;
         private readonly INxtConnector _nxtConnector;
         private readonly ITransactionProcessor _transactionProcessor;
-        private readonly IBlockProcessor _blockProcessor;
         private Block _lastKnownBlock;
 
-        public NxtController(INxtRepository repository, INxtConnector nxtConnector, ITransactionProcessor transactionProcessor, IBlockProcessor blockProcessor)
+        public NxtController(INxtRepository repository, INxtConnector nxtConnector, ITransactionProcessor transactionProcessor)
         {
             _repository = repository;
             _nxtConnector = nxtConnector;
             _transactionProcessor = transactionProcessor;
-            _blockProcessor = blockProcessor;
         }
 
         public void Start(CancellationToken cancellationToken)
@@ -28,6 +26,7 @@ namespace NxtExchange
             try
             {
                 Init();
+                throw new Exception("test");
                 ScanBlockchain(cancellationToken);
                 CheckForNewTransactions(cancellationToken);
             }
@@ -70,6 +69,7 @@ namespace NxtExchange
                     _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
                     currentBlock = _repository.GetBlockOnHeight(currentBlock.Height - 1);
                     currentBlockExistsInBlockchain = true;
+                    _lastKnownBlock = currentBlock;
                 }
                 else
                 {

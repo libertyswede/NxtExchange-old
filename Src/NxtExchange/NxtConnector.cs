@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using NxtExchange.DAL;
 using NxtLib;
 using NxtLib.Accounts;
