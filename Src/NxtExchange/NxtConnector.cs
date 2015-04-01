@@ -9,7 +9,7 @@ namespace NxtExchange
     public interface INxtConnector
     {
         Block GetNextBlock(ulong blockId);
-        ICollection<InboundTransaction> GetUnconfirmedTransactions();
+        List<InboundTransaction> GetNewUnconfirmedTransactions();
     }
 
     public class NxtConnector : INxtConnector
@@ -29,20 +29,33 @@ namespace NxtExchange
 
         public Block GetNextBlock(ulong blockId)
         {
-            Block block = null;
-            var getBlockResult = _blockService.GetBlock(BlockLocator.ByBlockId(blockId)).Result;
-            if (getBlockResult.NextBlock.HasValue)
+            try
             {
-                var nextBlockResult = _blockService.GetBlockIncludeTransactions(BlockLocator.ByBlockId(getBlockResult.NextBlock.Value)).Result;
-                block = _blockProcessor.ConvertBlockAndTransactions(nextBlockResult);
+                Block block = null;
+                var getBlockResult = _blockService.GetBlock(BlockLocator.ByBlockId(blockId)).Result;
+                if (getBlockResult.NextBlock.HasValue)
+                {
+                    var nextBlockResult = _blockService.GetBlockIncludeTransactions(BlockLocator.ByBlockId(getBlockResult.NextBlock.Value)).Result;
+                    block = _blockProcessor.ConvertBlockAndTransactions(nextBlockResult);
+                }
+                return block;
             }
-            return block;
+            catch (NxtException e)
+            {
+                if (e.ErrorCode == 4)
+                {
+                    throw new BlockDoesNotExistException(blockId);
+                }
+                throw;
+            }
         }
 
-        public ICollection<InboundTransaction> GetUnconfirmedTransactions()
+        public List<InboundTransaction> GetNewUnconfirmedTransactions()
         {
             var unconfirmedTransactions = _accountService.GetUnconfirmedTransactions().Result;
-            return _transactionProcessor.ConvertToInboundTransactions(unconfirmedTransactions.UnconfirmedTransactions);
+            var inboundTransactions = _transactionProcessor.ConvertToInboundTransactions(unconfirmedTransactions.UnconfirmedTransactions);
+            inboundTransactions = _transactionProcessor.RemoveUnknownRecipients(inboundTransactions);
+            return _transactionProcessor.RemoveKnownTransactions(inboundTransactions);
         }
     }
 }

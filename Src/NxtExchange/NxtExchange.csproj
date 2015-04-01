@@ -53,6 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlockDoesNotExistException.cs" />
     <Compile Include="BlockProcessor.cs" />
     <Compile Include="DAL\Account.cs" />
     <Compile Include="DAL\Block.cs" />

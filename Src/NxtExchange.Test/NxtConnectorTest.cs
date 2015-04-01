@@ -130,7 +130,7 @@ namespace NxtExchange.Test
                 .Setup(t => t.ConvertToInboundTransactions(It.IsAny<IList<Transaction>>()))
                 .Returns(expected);
             
-            var actual = _nxtConnector.GetUnconfirmedTransactions();
+            var actual = _nxtConnector.GetNewUnconfirmedTransactions();
 
             Assert.AreSame(expected, actual);
         }

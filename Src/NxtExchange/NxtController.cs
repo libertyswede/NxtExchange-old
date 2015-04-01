@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NxtExchange.DAL;
-using NxtLib;
 
 namespace NxtExchange
 {
@@ -44,43 +42,36 @@ namespace NxtExchange
         private void ScanBlockchain(CancellationToken cancellationToken)
         {
             var currentBlock = _lastKnownBlock;
-            var currentBlockExistsInBlockchain = true;
-            Block nextBlock = null;
-            
-            do
+
+            while (currentBlock != null && !cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    nextBlock = _nxtConnector.GetNextBlock(currentBlock.NxtBlockId.ToUnsigned());
+                    currentBlock = TryAddNextBlock(currentBlock);
                 }
-                catch (NxtException e)
+                catch (BlockDoesNotExistException)
                 {
-                    if (e.ErrorCode == 4)
-                    {
-                        currentBlockExistsInBlockchain = false;
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    currentBlock = Rollback(currentBlock);
                 }
-                if (!currentBlockExistsInBlockchain)
-                {
-                    _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
-                    currentBlock = _repository.GetBlockOnHeight(currentBlock.Height - 1);
-                    currentBlockExistsInBlockchain = true;
-                    _lastKnownBlock = currentBlock;
-                }
-                else
-                {
-                    currentBlock = nextBlock;
-                    if (currentBlock != null)
-                    {
-                        _repository.AddBlockIncludeTransactions(currentBlock);
-                        _lastKnownBlock = currentBlock;
-                    }
-                }
-            } while (currentBlock != null && !cancellationToken.IsCancellationRequested);
+                _lastKnownBlock = currentBlock;
+            }
+        }
+
+        private Block Rollback(Block currentBlock)
+        {
+            _repository.RemoveBlockIncludingTransactions(currentBlock.Id);
+            var previousBlock = _repository.GetBlockOnHeight(currentBlock.Height - 1);
+            return previousBlock;
+        }
+
+        private Block TryAddNextBlock(Block currentBlock)
+        {
+            var nextBlock = _nxtConnector.GetNextBlock(currentBlock.NxtBlockId.ToUnsigned());
+            if (nextBlock != null)
+            {
+                _repository.AddBlockIncludeTransactions(nextBlock);
+            }
+            return nextBlock;
         }
 
         private void CheckForNewTransactions(CancellationToken cancellationToken)
@@ -88,11 +79,8 @@ namespace NxtExchange
             while (!cancellationToken.IsCancellationRequested)
             {
                 ScanBlockchain(cancellationToken);
-                var transactions = _nxtConnector.GetUnconfirmedTransactions();
-                var existingTransactions = _repository.GetUnconfirmedTransactions();
-                var newTransactions = transactions.Where(t => existingTransactions.All(et => t.NxtTransactionId != et.NxtTransactionId)).ToList();
-                newTransactions = _transactionProcessor.FilterTransactionsBasedOnKnownAccounts(newTransactions);
-                _repository.AddTransactions(newTransactions);
+                var transactions = _nxtConnector.GetNewUnconfirmedTransactions();
+                _repository.AddTransactions(transactions);
 
                 Task.Delay(new TimeSpan(0, 0, 10), cancellationToken).Wait(cancellationToken);
             }

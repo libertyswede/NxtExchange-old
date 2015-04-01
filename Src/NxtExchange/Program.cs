@@ -19,7 +19,8 @@ namespace NxtExchange
             var controller = new NxtController(repository, connector, transactionProcessor);
 
             var cts = new CancellationTokenSource();
-            Task controllerTask = new Task(controller.Start(cts.Token));
+            var task = new Task(() => controller.Start(cts.Token), cts.Token, TaskCreationOptions.LongRunning);
+            // någonting om exception handling
 
             Task.Factory.StartNew(() => controller.Start(cts.Token), TaskCreationOptions.LongRunning);
 

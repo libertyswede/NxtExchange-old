@@ -8,8 +8,9 @@ namespace NxtExchange
 {
     public interface ITransactionProcessor
     {
-        List<InboundTransaction> FilterTransactionsBasedOnKnownAccounts(IList<InboundTransaction> transactions);
+        List<InboundTransaction> RemoveUnknownRecipients(IList<InboundTransaction> transactions);
         List<InboundTransaction> ConvertToInboundTransactions(IList<Transaction> transactions);
+        List<InboundTransaction> RemoveKnownTransactions(List<InboundTransaction> inboundTransactions);
     }
 
     public class TransactionProcessor : ITransactionProcessor
@@ -46,7 +47,13 @@ namespace NxtExchange
             return inboundTransactions;
         }
 
-        public List<InboundTransaction> FilterTransactionsBasedOnKnownAccounts(IList<InboundTransaction> transactions)
+        public List<InboundTransaction> RemoveKnownTransactions(List<InboundTransaction> transactions)
+        {
+            var existingTransactions = _repository.GetTransactionsByNxtId(transactions.Select(t => t.NxtTransactionId));
+            return transactions.Where(t => existingTransactions.All(et => et.NxtTransactionId != t.NxtTransactionId)).ToList();
+        }
+
+        public List<InboundTransaction> RemoveUnknownRecipients(IList<InboundTransaction> transactions)
         {
             var filteredTransactions = new List<InboundTransaction>();
             var accounts = _repository.GetAccountsWithNxtId(transactions.Select(t => t.NxtRecipientId));

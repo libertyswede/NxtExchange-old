@@ -13,6 +13,7 @@ namespace NxtExchange.DAL
         void AddBlockIncludeTransactions(Block block);
         void AddTransactions(List<InboundTransaction> transactions);
         void RemoveBlockIncludingTransactions(int blockId);
+        List<InboundTransaction> GetTransactionsByNxtId(IEnumerable<long> transactionIds);
     }
 
     public class NxtRepository : INxtRepository
@@ -89,6 +90,14 @@ namespace NxtExchange.DAL
                 context.Blocks.Remove(block);
                 
                 context.SaveChanges();
+            }
+        }
+
+        public List<InboundTransaction> GetTransactionsByNxtId(IEnumerable<long> transactionIds)
+        {
+            using (var context = new NxtContext())
+            {
+                return context.InboundTransactions.Where(t => transactionIds.Contains(t.NxtTransactionId)).ToList();
             }
         }
     }

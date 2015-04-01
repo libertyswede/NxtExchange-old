@@ -20,7 +20,7 @@ namespace NxtExchange
         public Block ConvertBlockAndTransactions(NxtLib.Block<NxtLib.Transaction> nxtBlock)
         {
             var transactions = _transactionProcessor.ConvertToInboundTransactions(nxtBlock.Transactions);
-            transactions = _transactionProcessor.FilterTransactionsBasedOnKnownAccounts(transactions);
+            transactions = _transactionProcessor.RemoveUnknownRecipients(transactions);
 
             var block = new Block
             {
